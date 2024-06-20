@@ -17,12 +17,6 @@ async function addMovie() {
 }
 
 async function updateMovie() {
-    // Expected:
-    // 1. Prompt the user for movie ID to update.
-    // 2. Prompt the user for new movie title, year, and genre ID.
-    // 3. Use Prisma client to update the movie with the provided ID with the new details.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#update
-    // 4. Print the updated movie details.
     const movieId: string = readlineSync.question("Enter movie ID: ");
     const updatedTitle: string = readlineSync.question("Enter updated title: ");
     const updatedYear: number = readlineSync.questionInt(
@@ -40,6 +34,11 @@ async function updateMovie() {
             title: updatedTitle,
             year: updatedYear,
             genreId: updatedGenreId,
+            genre: {
+                connect: {
+                    id: updatedGenreId,
+                },
+            },
         },
     });
 
@@ -47,11 +46,6 @@ async function updateMovie() {
 }
 
 async function deleteMovie() {
-    // Expected:
-    // 1. Prompt the user for movie ID to delete.
-    // 2. Use Prisma client to delete the movie with the provided ID.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#delete
-    // 3. Print a message confirming the movie deletion.
     const movieId: string = readlineSync.question("Enter movie ID: ");
 
     const result = await prisma.movie.delete({
@@ -62,37 +56,33 @@ async function deleteMovie() {
 }
 
 async function listMovies() {
-    // Expected:
-    // 1. Use Prisma client to fetch all movies.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findmany
-    // 2. Include the genre details in the fetched movies.
-    // 3. Print the list of movies with their genres.
     const result = await prisma.movie.findMany();
     console.table(result);
 }
 
 async function listMovieById() {
-    // Expected:
-    // 1. Prompt the user for movie ID to list.
-    // 2. Use Prisma client to fetch the movie with the provided ID.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findunique
-    // 3. Include the genre details in the fetched movie.
-    // 4. Print the movie details with its genre.
     const movieId: string = readlineSync.question("Enter movie ID: ");
 
     const result = await prisma.movie.findUnique({
         where: { id: movieId },
         include: { genre: true },
     });
+
+    console.log(result); //TODO Select without ids
 }
 
 async function listMoviesByYear() {
-    // Expected:
-    // 1. Prompt the user for the year to list movies.
-    // 2. Use Prisma client to fetch movies from the provided year.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findmany
-    // 3. Include the genre details in the fetched movies.
-    // 4. Print the list of movies from that year with their genres.
+    const searchYear: number = readlineSync.questionInt("Enter a year: ");
+
+    const result = await prisma.movie.findMany({
+        where: {
+            year: {
+                equals: searchYear,
+            },
+        },
+    });
+
+    console.table(result);
 }
 
 async function listMoviesByGenre() {
@@ -102,14 +92,16 @@ async function listMoviesByGenre() {
     //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findmany
     // 3. Include the genre details in the fetched movies.
     // 4. Print the list of movies with the provided genre.
+    const genreName: string = readlineSync.question("Enter genre name: ");
+
+    const result = await prisma.genre.findMany({
+        where: {
+            genre: genreName,
+        },
+    });
 }
 
 async function addGenre() {
-    // Expected:
-    // 1. Prompt the user for genre name.
-    // 2. Use Prisma client to create a new genre with the provided name.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#create
-    // 3. Print the created genre details.
     const genreName: string = readlineSync.question("Enter genre name: ");
 
     const result = await prisma.genre.create({
@@ -117,6 +109,8 @@ async function addGenre() {
             name: genreName,
         },
     });
+
+    console.log(result);
 }
 
 async function addGenreToMovie() {
