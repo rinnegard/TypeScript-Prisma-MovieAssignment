@@ -1,11 +1,11 @@
-import readlineSync from 'readline-sync';
-import { PrismaClient, Movie, Genre } from '@prisma/client';
+import readlineSync from "readline-sync";
+import { PrismaClient, Movie, Genre } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function addMovie() {
-    const title: string = readlineSync.question('Enter movie title: ');
-    const year: number = readlineSync.questionInt('Enter movie year: ');
+    const title: string = readlineSync.question("Enter movie title: ");
+    const year: number = readlineSync.questionInt("Enter movie year: ");
 
     const movie: Movie = await prisma.movie.create({
         data: {
@@ -23,6 +23,27 @@ async function updateMovie() {
     // 3. Use Prisma client to update the movie with the provided ID with the new details.
     //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#update
     // 4. Print the updated movie details.
+    const movieId: string = readlineSync.question("Enter movie ID: ");
+    const updatedTitle: string = readlineSync.question("Enter updated title: ");
+    const updatedYear: number = readlineSync.questionInt(
+        "Enter updated year: "
+    );
+    const updatedGenreId: string = readlineSync.question(
+        "Enter updated genre ID: "
+    );
+
+    const result = await prisma.movie.update({
+        where: {
+            id: movieId,
+        },
+        data: {
+            title: updatedTitle,
+            year: updatedYear,
+            genreId: updatedGenreId,
+        },
+    });
+
+    console.table(result);
 }
 
 async function deleteMovie() {
@@ -31,6 +52,13 @@ async function deleteMovie() {
     // 2. Use Prisma client to delete the movie with the provided ID.
     //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#delete
     // 3. Print a message confirming the movie deletion.
+    const movieId: string = readlineSync.question("Enter movie ID: ");
+
+    const result = await prisma.movie.delete({
+        where: { id: movieId },
+    });
+
+    console.log("Deleted", result);
 }
 
 async function listMovies() {
@@ -39,6 +67,8 @@ async function listMovies() {
     //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findmany
     // 2. Include the genre details in the fetched movies.
     // 3. Print the list of movies with their genres.
+    const result = await prisma.movie.findMany();
+    console.table(result);
 }
 
 async function listMovieById() {
@@ -48,6 +78,12 @@ async function listMovieById() {
     //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findunique
     // 3. Include the genre details in the fetched movie.
     // 4. Print the movie details with its genre.
+    const movieId: string = readlineSync.question("Enter movie ID: ");
+
+    const result = await prisma.movie.findUnique({
+        where: { id: movieId },
+        include: { genre: true },
+    });
 }
 
 async function listMoviesByYear() {
@@ -74,6 +110,13 @@ async function addGenre() {
     // 2. Use Prisma client to create a new genre with the provided name.
     //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#create
     // 3. Print the created genre details.
+    const genreName: string = readlineSync.question("Enter genre name: ");
+
+    const result = await prisma.genre.create({
+        data: {
+            name: genreName,
+        },
+    });
 }
 
 async function addGenreToMovie() {
@@ -101,7 +144,7 @@ async function main() {
         console.log("9. Add Genre to Movie");
         console.log("0. Exit");
 
-        const choice: number = readlineSync.questionInt('Enter your choice: ');
+        const choice: number = readlineSync.questionInt("Enter your choice: ");
 
         switch (choice) {
             case 1:
@@ -135,13 +178,13 @@ async function main() {
                 exit = true;
                 break;
             default:
-                console.log('Invalid choice. Please try again.');
+                console.log("Invalid choice. Please try again.");
         }
     }
 }
 
 main()
-    .catch(e => console.error(e))
+    .catch((e) => console.error(e))
     .finally(async () => {
         await prisma.$disconnect();
     });
