@@ -76,6 +76,9 @@ type Display = {
 async function listMovies() {
     const result = await prisma.movie.findMany({
         include: { genre: true },
+        orderBy: {
+            year: "asc",
+        },
     });
 
     let display: any = result.map((movie) => {
@@ -87,10 +90,9 @@ async function listMovies() {
                 return total + `,${genre.name}`;
             }, "");
             if (typeof movie.genre === "string") {
-                movie.genre = movie.genre.substring(1);
+                movie.genre = movie.genre.slice(1);
             }
         }
-        movie.genre;
     });
     console.table(display);
 }
@@ -166,54 +168,47 @@ async function addGenre() {
     console.log(result);
 }
 
-async function addManyGenre() {
-    const genreNames: string = readlineSync.question(
-        "Enter genre names(comma seperated): "
-    );
-    let genreArr: string[] = genreNames.split(",");
-    let genreData = genreArr.map((item) => {
-        if (typeof item === "string") {
-            item = item.trim().toLowerCase();
-        }
-        return { name: item };
+async function getGenreIdByName(name: string) {
+    const result = await prisma.genre.findFirst({
+        where: {
+            name: name,
+        },
     });
-    console.log("Adding", genreData);
 
-    const result = await prisma.genre.createMany({
-        data: genreData,
-    });
+    return result?.id;
 }
 
 async function addGenreToMovie() {
     const movieId: string = readlineSync.question("Enter movie ID: ");
-    const genre: string = readlineSync.question("Enter genre: ");
+    const genreNames: string = readlineSync.question(
+        "Enter genre names(comma seperated): "
+    );
+    let genreArr: string[] = genreNames.split(",").map((item) => {
+        return (item = item.trim().toLowerCase());
+    });
+    console.log(genreArr);
 
-    const genreId = await prisma.genre.findFirst({
+    let genreData = await Promise.all(
+        genreArr.map(async (item: string) => {
+            const id = await getGenreIdByName(item);
+            return { id: id };
+        })
+    );
+
+    console.log(genreData);
+
+    const result = await prisma.movie.update({
         where: {
-            name: genre,
+            id: movieId,
+        },
+        data: {
+            genre: {
+                connect: genreData,
+            },
         },
     });
 
-    try {
-        const result = await prisma.movie.update({
-            where: {
-                id: movieId,
-            },
-            data: {
-                genre: {
-                    connect: {
-                        id: genreId?.id,
-                    },
-                },
-            },
-        });
-    } catch (error) {
-        if (error instanceof Error) {
-            console.log(error.message);
-        } else {
-            console.log(error);
-        }
-    }
+    console.log(result);
 }
 
 async function main() {
@@ -229,8 +224,7 @@ async function main() {
         console.log("6. List Movies by Year");
         console.log("7. List Movies by Genre");
         console.log("8. Add Genre");
-        console.log("9. Add Many Genres");
-        console.log("10. Add Genre to Movie");
+        console.log("9. Add Genres to Movie");
         console.log("0. Exit");
 
         const choice: number = readlineSync.questionInt("Enter your choice: ");
@@ -261,9 +255,6 @@ async function main() {
                 await addGenre();
                 break;
             case 9:
-                await addManyGenre();
-                break;
-            case 10:
                 await addGenreToMovie();
                 break;
             case 0:
