@@ -66,9 +66,33 @@ async function deleteMovie() {
     console.log("Deleted", result);
 }
 
+type Display = {
+    id: string;
+    title: string;
+    year: number;
+    genre: string | Genre;
+};
+
 async function listMovies() {
-    const result = await prisma.movie.findMany();
-    console.table(result);
+    const result = await prisma.movie.findMany({
+        include: { genre: true },
+    });
+
+    let display: any = result.map((movie) => {
+        return movie;
+    });
+    display.forEach((movie: Display) => {
+        if (Array.isArray(movie.genre)) {
+            movie.genre = movie.genre.reduce((total: string, genre: Genre) => {
+                return total + `,${genre.name}`;
+            }, "");
+            if (typeof movie.genre === "string") {
+                movie.genre = movie.genre.substring(1);
+            }
+        }
+        movie.genre;
+    });
+    console.table(display);
 }
 
 async function listMovieById() {
