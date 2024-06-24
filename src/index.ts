@@ -70,18 +70,18 @@ type Display = {
     id: string;
     title: string;
     year: number;
-    genre: string | Genre;
+    genre?: string | Genre;
 };
 
 async function listMovies() {
-    const result = await prisma.movie.findMany({
+    const result: Movie[] = await prisma.movie.findMany({
         include: { genre: true },
         orderBy: {
             year: "asc",
         },
     });
 
-    let display: any = result.map((movie) => {
+    let display: Display[] = result.map((movie) => {
         return movie;
     });
     display.forEach((movie: Display) => {
