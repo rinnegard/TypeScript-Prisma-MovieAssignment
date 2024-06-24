@@ -1,7 +1,5 @@
 import readlineSync from "readline-sync";
-import { PrismaClient, Movie, Genre, Prisma } from "@prisma/client";
-import { connect } from "http2";
-import { log } from "console";
+import { PrismaClient, Movie, Genre } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -20,13 +18,29 @@ async function addMovie() {
 
 async function updateMovie() {
     const movieId: string = readlineSync.question("Enter movie ID: ");
-    const updatedTitle: string = readlineSync.question("Enter updated title: ");
-    const updatedYear: number = readlineSync.questionInt(
-        "Enter updated year: "
+    let updatedTitle: string | undefined = readlineSync.question(
+        "Enter updated title: "
     );
-    const updatedGenreId: string = readlineSync.question(
+    let updatedYear: number = readlineSync.questionInt("Enter updated year: ");
+    let updatedGenreId: string = readlineSync.question(
         "Enter updated genre ID: "
     );
+
+    if (updatedTitle === "") {
+        updatedTitle = undefined;
+    }
+
+    let genreConnect: {} | undefined;
+
+    if (updatedGenreId === "") {
+        genreConnect = undefined;
+    } else {
+        genreConnect = {
+            connect: {
+                id: updatedGenreId,
+            },
+        };
+    }
 
     const result = await prisma.movie.update({
         where: {
@@ -35,11 +49,7 @@ async function updateMovie() {
         data: {
             title: updatedTitle,
             year: updatedYear,
-            genre: {
-                connect: {
-                    id: updatedGenreId,
-                },
-            },
+            genre: genreConnect,
         },
     });
 
@@ -126,12 +136,6 @@ async function addGenre() {
 }
 
 async function addManyGenre() {
-    // Expected:
-    // 1. Prompt the user for multiple genres to add (comma separated).
-    // 2. Split the input into an array of genre names.
-    // 3. Use Prisma client to create multiple genres with the provided names.
-    //    Reference: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#create
-    // 4. Print the created genres details.
     const genreNames: string = readlineSync.question(
         "Enter genre names(comma seperated): "
     );
@@ -175,6 +179,8 @@ async function addGenreToMovie() {
     } catch (error) {
         if (error instanceof Error) {
             console.log(error.message);
+        } else {
+            console.log(error);
         }
     }
 }
