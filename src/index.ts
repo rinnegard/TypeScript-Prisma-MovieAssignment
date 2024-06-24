@@ -1,5 +1,7 @@
 import readlineSync from "readline-sync";
-import { PrismaClient, Movie, Genre } from "@prisma/client";
+import { PrismaClient, Movie, Genre, Prisma } from "@prisma/client";
+import { connect } from "http2";
+import { log } from "console";
 
 const prisma = new PrismaClient();
 
@@ -147,7 +149,35 @@ async function addManyGenre() {
     });
 }
 
-async function addGenreToMovie() {}
+async function addGenreToMovie() {
+    const movieId: string = readlineSync.question("Enter movie ID: ");
+    const genre: string = readlineSync.question("Enter genre: ");
+
+    const genreId = await prisma.genre.findFirst({
+        where: {
+            name: genre,
+        },
+    });
+
+    try {
+        const result = await prisma.movie.update({
+            where: {
+                id: movieId,
+            },
+            data: {
+                genre: {
+                    connect: {
+                        id: genreId?.id,
+                    },
+                },
+            },
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            console.log(error.message);
+        }
+    }
+}
 
 async function main() {
     let exit = false;
