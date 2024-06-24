@@ -18,7 +18,6 @@ model Movie {
   title   String
   year    Int
   genre   Genre[]
-  genreId String?
 }
 
 model Genre {
