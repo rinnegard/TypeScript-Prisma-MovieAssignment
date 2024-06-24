@@ -86,8 +86,8 @@ async function listMovieById() {
             },
         },
     });
-
     console.log(result);
+}
 
 async function listMoviesByYear() {
     const searchYear: number = readlineSync.questionInt("Enter a year: ");
