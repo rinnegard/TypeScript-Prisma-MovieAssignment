@@ -76,11 +76,18 @@ async function listMovieById() {
 
     const result = await prisma.movie.findUnique({
         where: { id: movieId },
-        include: { genre: true },
+        select: {
+            title: true,
+            year: true,
+            genre: {
+                select: {
+                    name: true,
+                },
+            },
+        },
     });
 
-    console.log(result); //TODO Select without ids
-}
+    console.log(result);
 
 async function listMoviesByYear() {
     const searchYear: number = readlineSync.questionInt("Enter a year: ");
